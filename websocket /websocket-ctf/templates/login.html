@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>ANONYMOUS CHAT</h1>
+            <p>Connect anonymously with people worldwide</p>
+        </div>
+        
+        <div class="auth-form">
+            <h2>Login to Chat</h2>
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required autocomplete="off" placeholder="Enter your username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+                </div>
+                
+                <button type="submit" class="auth-btn">Login Anonymously</button>
+            </form>
+            
+            <div class="auth-links">
+                <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+            </div>
+            
+            <div class="feature-list">
+                <h3>Features:</h3>
+                <ul>
+                    <li>💬 Fully anonymous chatting</li>
+                    <li>👥 Create and join groups</li>
+                    <li>📖 Post 24-hour stories</li>
+                    <li>🌍 Connect with people worldwide</li>
+                    <li>🔒 Secure and private</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+{% endblock %}

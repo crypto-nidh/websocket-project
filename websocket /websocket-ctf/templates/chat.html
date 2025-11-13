@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block content %}
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">ANONYMOUS CHAT</div>
+            <div class="user-controls">
+                <span class="welcome">Hello, <span id="user-anonymous-name">{{ username }}</span></span>
+                <span class="user-id">ID: {{ user_id[:8] }}...</span>
+                <div class="header-actions">
+                    <button class="icon-btn" onclick="openStatusModal()" title="Status">💬</button>
+                    <button class="icon-btn" onclick="openNewChatModal()" title="New Chat">📝</button>
+                    <button class="icon-btn" onclick="openSettingsModal()" title="Settings">⚙️</button>
+                    <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Search -->
+                <div class="search-container">
+                    <input type="text" id="search-input" placeholder="Search chats..." class="search-input">
+                </div>
+
+                <!-- Tabs -->
+                <div class="sidebar-tabs">
+                    <button class="tab-btn active" data-tab="chats">💬 Chats</button>
+                    <button class="tab-btn" data-tab="friends">👥 Friends</button>
+                    <button class="tab-btn" data-tab="groups">🏠 Groups</button>
+                    <button class="tab-btn" data-tab="stories">📖 Stories</button>
+                </div>
+
+                <!-- Chats Tab -->
+                <div class="tab-content active" id="chats-tab">
+                    <div class="chats-list" id="chats-list">
+                        <!-- Chats will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Friends Tab -->
+                <div class="tab-content" id="friends-tab">
+                    <div class="friends-list" id="friends-list">
+                        {% for friend in friends %}
+                        <div class="friend-item" data-user-id="{{ friend.user_id }}">
+                            <div class="friend-avatar {{ 'online' if friend.is_online else 'offline' }}">
+                                {{ friend.username[0] }}
+                            </div>
+                            <div class="friend-info">
+                                <div class="friend-name">{{ friend.username }}</div>
+                                <div class="friend-status {{ 'online' if friend.is_online else 'offline' }}">
+                                    {{ 'Online' if friend.is_online else 'Offline' }}
+                                </div>
+                            </div>
+                            <div class="friend-actions">
+                                <button class="action-btn chat" onclick="startPrivateChat('{{ friend.user_id }}', '{{ friend.username }}')" title="Chat">💬</button>
+                                <button class="action-btn remove" onclick="removeFriend('{{ friend.user_id }}')" title="Remove">❌</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Groups Tab -->
+                <div class="tab-content" id="groups-tab">
+                    <div class="groups-header">
+                        <button class="create-group-btn" onclick="openCreateGroupModal()">Create Group</button>
+                    </div>
+                    <div class="groups-list" id="groups-list">
+                        {% for group in groups %}
+                        <div class="group-item" data-group-id="{{ group.id }}">
+                            <div class="group-avatar">🏠</div>
+                            <div class="group-info">
+                                <div class="group-name">{{ group.name }}</div>
+                                <div class="group-members">{{ group.member_count }} members</div>
+                            </div>
+                            <button class="action-btn chat" onclick="openGroupChat('{{ group.id }}', '{{ group.name }}')" title="Open Chat">💬</button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Stories Tab -->
+                <div class="tab-content" id="stories-tab">
+                    <div class="stories-header">
+                        <button class="create-story-btn" onclick="openStoryModal()">Create Story</button>
+                    </div>
+                    <div class="stories-list" id="stories-list">
+                        <!-- Stories will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Chat Area -->
+            <div class="main-chat">
+                <div class="chat-header" id="chat-header">
+                    <div class="chat-info">
+                        <div class="chat-avatar" id="chat-avatar">💬</div>
+                        <div class="chat-details">
+                            <div class="chat-name" id="chat-name">Select a chat to start messaging</div>
+                            <div class="chat-status" id="chat-status">Online</div>
+                        </div>
+                    </div>
+                    <div class="chat-actions">
+                        <button class="action-btn" onclick="clearChat()" title="Clear">🗑️</button>
+                        <button class="action-btn" onclick="toggleTheme()" title="Theme">🌙</button>
+                    </div>
+                </div>
+                
+                <div class="chat-messages" id="chat-messages">
+                    <div class="welcome-message">
+                        <h3>Welcome to Anonymous Chat!</h3>
+                        <p>Start private conversations with friends or join group chats.</p>
+                        <div class="feature-hint">
+                            <strong>💡 Features:</strong>
+                            <ul>
+                                <li>Private 1-on-1 chats</li>
+                                <li>Group conversations</li>
+                                <li>24-hour stories</li>
+                                <li>Friend system</li>
+                                <li>Complete anonymity</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chat-input-container" id="chat-input-container" style="display: none;">
+                    <div class="input-wrapper">
+                        <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
+                        <button id="send-button">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="newChatModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>New Chat</h3>
+                <span class="close" onclick="closeNewChatModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-tabs">
+                    <button class="modal-tab-btn active" data-tab="friends-chat">Friends</button>
+                    <button class="modal-tab-btn" data-tab="discover-chat">Discover</button>
+                </div>
+                <div class="modal-tab-content active" id="friends-chat-tab">
+                    <div class="users-list-modal" id="friends-chat-list">
+                        {% for friend in friends %}
+                        <div class="user-item-modal" onclick="startPrivateChat('{{ friend.user_id }}', '{{ friend.username }}')">
+                            <div class="user-avatar-modal {{ 'online' if friend.is_online else 'offline' }}">{{ friend.username[0] }}</div>
+                            <div class="user-info-modal">
+                                <div class="user-name-modal">{{ friend.username }}</div>
+                                <div class="user-status-modal">{{ 'Online' if friend.is_online else 'Offline' }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-tab-content" id="discover-chat-tab">
+                    <div class="users-list-modal" id="discover-chat-list">
+                        {% for user in online_users %}
+                        <div class="user-item-modal">
+                            <div class="user-avatar-modal online">{{ user.username[0] }}</div>
+                            <div class="user-info-modal">
+                                <div class="user-name-modal">{{ user.username }}</div>
+                                <div class="user-status-modal">Online</div>
+                            </div>
+                            <div class="user-actions-modal">
+                                {% if user.user_id not in friends %}
+                                <button class="add-friend-btn" onclick="sendFriendRequest('{{ user.user_id }}')">Add Friend</button>
+                                {% else %}
+                                <button class="chat-btn" onclick="startPrivateChat('{{ user.user_id }}', '{{ user.username }}')">Chat</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Group Modal -->
+    <div id="createGroupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Group</h3>
+                <span class="close" onclick="closeCreateGroupModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="group-name">Group Name</label>
+                    <input type="text" id="group-name" placeholder="Enter group name">
+                </div>
+                <div class="form-group">
+                    <label for="group-desc">Description</label>
+                    <textarea id="group-desc" placeholder="Group description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Add Friends to Group</label>
+                    <div class="friends-selector" id="friends-selector">
+                        {% for friend in friends %}
+                        <div class="friend-selector-item">
+                            <input type="checkbox" id="friend-{{ friend.user_id }}" value="{{ friend.user_id }}">
+                            <label for="friend-{{ friend.user_id }}">{{ friend.username }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeCreateGroupModal()" class="btn-secondary">Cancel</button>
+                <button onclick="createGroup()" class="btn-primary">Create Group</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Story Modal -->
+    <div id="storyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Story</h3>
+                <span class="close" onclick="closeStoryModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <textarea id="story-text" placeholder="Share something that will disappear in 24 hours..." maxlength="500"></textarea>
+                <div class="char-count"><span id="char-count">0</span>/500 characters</div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeStoryModal()" class="btn-secondary">Cancel</button>
+                <button onclick="postStory()" class="btn-primary">Post Story</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <span class="close" onclick="closeSettingsModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h4>Friend Requests</h4>
+                    <div id="pending-requests">
+                        {% for request in pending_requests %}
+                        <div class="pending-request">
+                            <span>{{ request.username }}</span>
+                            <div>
+                                <button class="btn-small accept" onclick="acceptFriendRequest('{{ request.user_id }}')">Accept</button>
+                                <button class="btn-small reject" onclick="rejectFriendRequest('{{ request.user_id }}')">Reject</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification hidden">
+        <div class="notification-content">
+            <span id="notification-text">New message</span>
+            <button onclick="closeNotification()" class="notification-close">×</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+{% endblock %}

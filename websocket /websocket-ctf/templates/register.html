@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>ANONYMOUS CHAT</h1>
+            <p>Join our anonymous community</p>
+        </div>
+        
+        <div class="auth-form">
+            <h2>Create Anonymous Account</h2>
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label for="username">Username (For login only)</label>
+                    <input type="text" id="username" name="username" required autocomplete="off" placeholder="Choose a username">
+                    <small>This is only for login. You'll get an anonymous name in chat.</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Create a password">
+                    <small>Minimum 6 characters</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required placeholder="Confirm your password">
+                </div>
+                
+                <button type="submit" class="auth-btn">Create Anonymous Account</button>
+            </form>
+            
+            <div class="auth-links">
+                <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+{% endblock %}
